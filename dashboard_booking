@@ -1,0 +1,95 @@
+public function bookings()
+	{
+		$this->load->view('Dashboard/bookings');
+	}
+
+
+    public function all_booking_types()
+	{
+
+		$data = json_decode(file_get_contents('php://input'), true);
+
+		$value = $data['type'];
+
+		
+
+		if ($value == 'All') {
+			$query = 'SELECT b.* , h.* , b.id as booking_id , (SELECT name FROM users WHERE id = b.userID) as booking_username FROM  book as b INNER JOIN hotels as h ON b.hotelID = h.id';
+
+			$result = $this->db->query($query)->result_array();
+		} else {
+			$query = 'SELECT b.* , h.* , b.id as booking_id , (SELECT name FROM users WHERE id = b.userID) as booking_username FROM  book as b INNER JOIN hotels as h ON b.hotelID = h.id 
+			WHERE b.type = ?
+			';
+
+			$result = $this->db->query($query , [$value])->result_array();
+		}
+
+	
+		if ($result) {
+			echo json_encode($result);
+		} else {
+			echo json_encode(["status" => "error" , "message" => "No Found Deatils"]);
+		}
+	}
+
+
+	public function find_bookings()
+	{
+
+		$data = json_decode(file_get_contents('php://input'), true);
+
+		$value = $data['value'];
+
+
+		$value = '%' . $value . '%';
+
+		$prams = array_fill(0, 6 , $value);
+
+
+		$query = 'SELECT b.* , h.* , b.id as booking_id , (SELECT name FROM users WHERE id = b.userID) as booking_username FROM  book as b INNER JOIN hotels as h ON b.hotelID = h.id 
+		WHERE 
+		(SELECT name FROM users WHERE id = b.userID) LIKE ?
+		OR b.hotelName LIKE ?
+		OR b.bookingPhone LIKE ?
+		OR b.type LIKE ?
+		OR b.bookingEmail LIKE ?
+		OR b.bookingName LIKE ?';
+
+		$result = $this->db->query($query , $prams)->result_array();
+
+	
+		if ($result) {
+			echo json_encode($result);
+		} else {
+			echo json_encode(["status" => "error" , "message" => "No Found Deatils"]);
+		}
+	}
+
+
+
+	public function update_booking()
+	{
+
+		$data = json_decode(file_get_contents('php://input'), true);
+
+		$value = $data['value'];
+
+
+		$values = [
+			$data['value'],
+			$data['id']
+		];
+
+
+		$query = 'UPDATE book SET type = ? WHERE id = ?';
+
+		$result = $this->db->query($query , $values);
+
+	
+		if ($result) {
+			echo json_encode(["status" => "error" , "message" => "Booking Updated"]);
+		} else {
+			echo json_encode(["status" => "error" , "message" => "Failed to update"]);
+		}
+	}
